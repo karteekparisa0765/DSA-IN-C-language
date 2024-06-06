@@ -1,0 +1,272 @@
+10
+20
+30
+40
+50
+2
+3
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct node {
+    int data;
+    struct node *next;
+};
+
+typedef struct graph {
+    int *vertex;
+    int *visited;
+    struct node **first;
+} GRAPH;
+
+struct que {
+    int *s;
+    int front;
+    int rear;
+} q;
+
+struct node *createnode(int data) {
+    struct node *nn = (struct node *)malloc(sizeof(struct node));
+    nn->data = data;
+    nn->next = NULL;
+    return nn;
+}
+
+GRAPH *creategraph(int n) {
+    GRAPH *g = (GRAPH *)malloc(sizeof(GRAPH));
+    g->vertex = (int *)malloc(n * sizeof(int));
+    g->visited = (int *)malloc(n * sizeof(int));
+    g->first = (struct node **)malloc(n * sizeof(struct node *));
+    for (int i = 0; i < n; i++) {
+        g->first[i] = NULL;
+        g->visited[i] = 0;
+    }
+    return g;
+}
+
+void createque(int n) {
+    q.s = (int *)malloc(n * sizeof(int));
+    q.front = -1;
+    q.rear = -1;
+    return;
+}
+
+void enque(int x) {
+    if (q.front == -1 && q.rear == -1) {
+        q.front = 0;
+        q.rear = 0;
+    } else {
+        q.rear++;
+    }
+    q.s[q.rear] = x;
+    return;
+}
+
+int deque() {
+    int x;
+    if (q.front == -1 || q.front > q.rear) {
+        printf("Queue underflow\n");
+        exit(1);
+    } else {
+        x = q.s[q.front];
+        q.front++;
+    }
+    return x;
+}
+
+GRAPH *insert(GRAPH *g, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("Enter the %dth vertex: ", i);
+        scanf("%d", &g->vertex[i]);
+    }
+    int x;
+    for (int i = 0; i < n; i++) {
+        do {
+            printf("Would you like to add adjacent vertex to the vertex %d? (1/0): ", g->vertex[i]);
+            scanf("%d", &x);
+            if (x == 1) {
+                printf("Enter the index of the data to insert: ");
+                int data;
+                scanf("%d", &data);
+                struct node *new = createnode(data);
+                if (g->first[i] == NULL) {
+                    g->first[i] = new;
+                } else {
+                    struct node *temp = g->first[i];
+                    while (temp->next != NULL) {
+                        temp = temp->next;
+                    }
+                    temp->next = new;
+                }
+            }
+        } while (x == 1);
+    }
+    return g;
+}
+
+GRAPH *refresh(GRAPH *g, int n) {
+    for (int i = 0; i < n; i++) {
+        g->visited[i] = 0;
+    }
+    return g;
+}
+
+void BFS(GRAPH *g, int v, int n) {
+    g = refresh(g, n);
+    if (g->visited[v] == 0) {
+        createque(n);
+        enque(v);
+        g->visited[v] = 1;
+    }
+    while (q.front <= q.rear) {
+        int u = deque();
+        printf("%d ", g->vertex[u]);
+        struct node *temp = g->first[u];
+        while (temp != NULL) {
+            int w = temp->data;
+            if (g->visited[w] == 0) {
+                enque(w);
+                g->visited[w] = 1;
+            }
+            temp = temp->next;
+        }
+    }
+    printf("\n");
+    return;
+}
+
+void display(GRAPH *graph, int x) {
+    for (int v = 0; v < x; v++) {
+        struct node *temp = graph->first[v];
+        printf("Adjacency list of vertex %d\n", v);
+        while (temp) {
+            printf("%d -> ", temp->data);
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+}
+
+void storeGraph(GRAPH* g, int n, const char* filename) {
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        printf("Error opening file for writing.\n");
+        return;
+    }
+    fprintf(file, "%d\n", n);
+    for (int i = 0; i < n; i++) {
+        fprintf(file, "%d ", g->vertex[i]);
+        struct node* temp = g->first[i];
+        while (temp) {
+            fprintf(file, "%d ", temp->data);
+            temp = temp->next;
+        }
+        fprintf(file, "-1\n");
+    }
+    fclose(file);
+    printf("Graph data stored successfully.\n");
+}
+
+GRAPH* loadGraph(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        printf("Error opening file for reading.\n");
+        return NULL;
+    }
+    int n;
+    fscanf(file, "%d", &n);
+    GRAPH* g = creategraph(n);
+    for (int i = 0; i < n; i++) {
+        fscanf(file, "%d", &g->vertex[i]);
+        int data;
+        while (fscanf(file, "%d", &data) != EOF && data != -1) {
+            struct node* new_node = createnode(data);
+            if (!g->first[i]) {
+                g->first[i] = new_node;
+            } else {
+                struct node* temp = g->first[i];
+                while (temp->next) {
+                    temp = temp->next;
+                }
+                temp->next = new_node;
+            }
+        }
+    }
+    fclose(file);
+    printf("Loaded graph:\n");
+    display(g, n);
+    return g;
+}
+
+int main() {
+    int n, choice, data;
+    char filename[100];
+
+    printf("Enter no of vertices:");
+    scanf("%d", &n);
+    GRAPH *g = creategraph(n);
+
+    do {
+        printf("\n1. Create Graph\n2. Traverse (BFS)\n3. Display\n4. Store Graph\n5. Load Graph\n6. Exit\n");
+        printf("Enter your choice:");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                g = insert(g, n);
+                display(g, n);
+                break;
+            case 2:
+                printf("Enter the index value of starting vertex:");
+                scanf("%d", &data);
+                printf("BFS: ");
+                BFS(g, data, n);
+                g = refresh(g, n);
+                break;
+            case 3:
+                display(g, n);
+                break;
+            case 4:
+                printf("Enter the filename to store the graph: ");
+                scanf("%s", filename);
+                storeGraph(g, n, filename);
+                break;
+            case 5:
+                printf("Enter the filename to load the graph: ");
+                scanf("%s", filename);
+                g = loadGraph(filename);
+                if (g) {
+                    printf("Graph loaded successfully.\n");
+                }
+                break;
+            case 6:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
+        }
+    } while (choice != 6);
+
+    // Free the allocated memory for the queue
+    free(q.s);
+
+    // Free the allocated memory for the graph
+    for (int i = 0; i < n; i++) {
+        struct node* temp = g->first[i];
+        while (temp) {
+            struct node* del = temp;
+            temp = temp->next;
+            free(del);
+        }
+    }
+    free(g->first);
+    free(g->visited);
+    free(g->vertex);
+    free(g);
+
+    printf("The end\n");
+
+    return 0;
+}
+``

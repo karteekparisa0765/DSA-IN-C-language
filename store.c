@@ -218,7 +218,7 @@ FILE*ptr1 = fopen("adj.txt", "w");
     for (int i = 0; i < n; i++) {
         fprintf(ptr1, "%d ", g->vertex[i]);
         struct node* temp = g->first[i];
-        while (temp!=NULL) {
+        while (temp) {
             fprintf(ptr1, "%d ", temp->data);
             temp = temp->next;
         }
@@ -230,7 +230,7 @@ FILE*ptr1 = fopen("adj.txt", "w");
 
 
 FILE*ptr = fopen("adj.txt", "r");
-    if (ptr==NULL) {
+    if (ptr) {
         printf("Error openingptr for reading.\n");
     }
 
